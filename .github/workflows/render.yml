@@ -22,22 +22,12 @@ jobs:
 
       # Install quarto
       - uses: quarto-dev/quarto-actions/setup@v2
-
-      # Setup secrets
-      - name: Set up .Renviron
-        run: |
-          echo "OPENSKY_CLIENT_ID=${{ secrets.OPENSKY_CLIENT_ID }}" >> .Renviron
-          echo "OPENSKY_CLIENT_SECRET=${{ secrets.OPENSKY_CLIENT_SECRET }}" >> .Renviron
           
-      # Render the quarto file
-      - name: Render
-        run: quarto render index.qmd --output-dir=html
-        env:
-          OPENSKY_CLIENT_ID: ${{ secrets.OPENSKY_CLIENT_ID }}
-          OPENSKY_CLIENT_SECRET: ${{ secrets.OPENSKY_CLIENT_SECRET }}
-
-      # Publish html/ to GitHub pages
-      - name: Publish to GitHub pages 🚀
-        uses: JamesIves/github-pages-deploy-action@v4.5.0
+      - name: Render and Publish
+        uses: quarto-dev/quarto-actions/publish@v2
         with:
-          folder: html
+          target: gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPOTIFY_CLIENT_ID: ${{ secrets.MY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.MY_CLIENT_SECRET }}
