@@ -7,16 +7,24 @@ $navbar-fg: white;
 
 /*-- scss:rules --*/
 // CSS rules for styling go here
-// Scale pop-up for mobile by doubling the max-width
+// Scale pop-up for different displays
 body .maplibregl-popup {
-    max-width: 80vw !important; // Default for mobile and small screens
+    max-width: 80vw !important; // Default for mobile and small screens (<901px)
     max-height: 70vh !important;
     z-index: 1200;
 }
 
-@media screen and (min-width: 901px) {
+// Rule for displays between 901px and 1351px
+@media screen and (min-width: 901px) and (max-width: 1351px) {
     body .maplibregl-popup {
-        max-width: 40vw !important; // Smaller on desktop
+        max-width: 60vw !important; // Larger on "tablet" and medium desktop displays
+    }
+}
+
+// Rule for large displays (>1351px)
+@media screen and (min-width: 1352px) {
+    body .maplibregl-popup {
+        max-width: 40vw !important; // Smaller on large desktop displays
     }
 }
 
