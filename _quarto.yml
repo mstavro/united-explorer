@@ -2,5 +2,5 @@ project:
   type: website 
 
 website:
-  title: "Unofficial United Flight Explorer" 
+  title: "Unofficial United Flight Explorer"
   favicon: https://www.united.com/2500e4e62233fbfe8ac6.unitedLogoNew.svg
