@@ -1,0 +1,148 @@
+---
+title: "Unofficial United Fleet Explorer"
+format: 
+    dashboard:
+        orientation: rows
+        theme:
+            - default
+            - united.scss
+        nav-buttons:
+            - icon: book-fill
+            - icon: github
+        html-table-processing: none
+---
+
+```{r, include=FALSE}
+source("support_functions.R") 
+
+united_full_fleet_info <- read_csv("data/united_full_fleet_info.csv")
+compatible_registrations <- read_csv("data/compatible_registrations.csv")
+
+### Rotates new aircraft onto the map every time this script is run
+### to adhere OpenSky API rate limits
+united_explore_10 <-
+  compatible_registrations |>
+  slice_sample(n = 10) |>
+  pull(icao24)
+
+united_10_tracks <- bind_rows(
+  map(united_explore_10, \(x) get_flight_track(x))
+) |> st_as_sf()
+
+united_10_positions <- bind_rows(
+  map(united_explore_10, \(x) get_state_vector(x))
+) |> mutate(registration = map_chr(icao24, \(x) get_registration_from_icao24(x, return_tibble = F))) |> 
+    st_as_sf()
+
+united_10_positions <- left_join(united_10_positions |> mutate(baro_altitude = st_coordinates(united_10_positions)[,3]), united_full_fleet_info) 
+route_info <- bind_rows(
+    map(united_10_positions |> drop_na(callsign) |> pull(callsign), \(x) get_route_information(x))
+)
+united_10_positions <- left_join(united_10_positions, route_info) |> drop_na(callsign)
+
+united_10_tracks <- united_10_tracks |> filter(icao24 %in% (united_10_positions |> drop_na(time) |> pull(icao24)))
+
+united_10_gt <- united_10_positions |> as_tibble() |> drop_na(callsign)
+united_10_gt <- united_10_gt |>  mutate(gt_html = map_chr(callsign, \(x) generate_map_tables(df = united_10_gt, x))) |> select(callsign, gt_html)
+
+united_10_positions_gt <- left_join(united_10_positions, united_10_gt) |> st_as_sf()
+```
+
+# Fleet Sample Flight Map
+
+## map
+
+:::{.callout-note}
+## Interact with the Map
+
+Click on any plane icon within the map for additional information. Map data as of `{r} Sys.time()` UTC
+:::
+
+<br>
+
+```{r}
+maplibre(style = carto_style("dark-matter"), width = "96vw", height = "100vh", bounds = united_10_tracks, attributionControl = list(customAttribution = "<a href='https://sites.google.com/site/unitedfleetsite/mainline-fleet-tracking'>United Fleet Site project contributors</a>, OpenSky Network contributors, adsb.lol, ADSB-DB", compact = TRUE)) |> set_projection("globe") |> add_source(id = "paths", data = united_10_tracks) |> add_source(id = "positions", data = united_10_positions_gt) |> add_image("aircraft-icon", "https://upload.wikimedia.org/wikipedia/commons/1/10/Avatar_plane.png") |> add_line_layer(id = "flight-tracks", source = "paths", line_color = "#1414D2", line_width = 3) |> add_symbol_layer(id = "aircraft-positions", source = "positions", icon_rotate = get_column("true_track"), icon_image = "aircraft-icon", icon_size = interpolate(property=  "zoom", values = c(4,8,12), stops = c(0.15, 0.25, 0.4)), icon_allow_overlap = TRUE, popup = "gt_html", tooltip = "gt_html", icon_rotation_alignment = "map", icon_pitch_alignment = "map") |> add_fullscreen_control() |> add_reset_control()
+```
+
+# Full Fleet Information
+
+
+```{r}
+main_tbl <- united_full_fleet_info |> filter(str_starts(registration, "N")) |>
+  mutate(aircraft_seatmap = web_image(aircraft_seatmap, height = "25em")) |>
+      mutate(amenity_ife = case_when(
+      ife == "NO" ~ NA,
+      str_detect(ife, "No ") ~ NA,
+      str_detect(ife, "AVOD|DTV") & str_detect(ife, "PDE") ~ glue('{web_image("https://media.united.com/assets/m/6902cf38052408ed/original/x-global-icons-travel-airport-on-demand.svg")} {web_image("https://media.united.com/assets/m/36ec366e93188fda/original/x-global-icons-travel-airport-personal-device.svg")}'),
+      str_detect(ife, "AVOD|DTV") ~ web_image("https://media.united.com/assets/m/6902cf38052408ed/original/x-global-icons-travel-airport-on-demand.svg"),
+      str_detect(ife, "Seatback|SEATBACK") ~ web_image("https://media.united.com/assets/m/6902cf38052408ed/original/x-global-icons-travel-airport-on-demand.svg"),
+      str_detect(ife, "PDE") ~ web_image("https://media.united.com/assets/m/36ec366e93188fda/original/x-global-icons-travel-airport-personal-device.svg")
+    )) |>
+    mutate(amenity_wifi = case_when(
+      wifi == "NO" ~ NA,
+      .default = web_image("https://media.united.com/assets/m/4d2b44a2bcff27d9/original/x-global-icons-travel-airport-wifi.svg")
+    )) |>
+    mutate(amenity_power = case_when(
+      power == "NO" ~ NA,
+      power == "F/E+" ~ NA,
+      .default = web_image("https://media.united.com/assets/m/3acf299d26de7a3b/original/x-global-icons-travel-airport-in-seat-power.svg")
+    )) |>
+    mutate(amenity_power = case_when(
+      str_detect(power, "USB") ~ glue("{amenity_power} {web_image('https://media.united.com/assets/m/601a3d239d42470/original/USB-icon.svg')}"),
+      .default = amenity_power
+    )) |>
+      mutate(amenities = glue("{amenity_wifi} {amenity_power} {amenity_ife}", .na = "")) |>
+      select(-amenity_wifi, -amenity_power, -amenity_ife)
+
+united_logo <- web_image("https://www.united.com/2500e4e62233fbfe8ac6.unitedLogoNew.svg", height = "1em")
+
+main_tbl <- main_tbl |> slice_sample(n = 5) |> mutate(amenity_table = map(registration, \(x) generate_addt_info_table(main_tbl, x))) |>
+      select(registration, delivered, aircraft_image, aircraft_model, aircraft_seatmap, amenity_table) |>
+      gt() |>
+      fmt_image(columns = aircraft_image, height = "15em") |> 
+      gt_merge_stack(col1 = aircraft_image, col2 = aircraft_model, font_size = c("14px", "18px"), palette = c("black", "black"), font_weight = c("bold", "normal")) |> 
+      gt_merge_stack(col1 = aircraft_image, col2 = aircraft_seatmap) |>
+      cols_move(columns = aircraft_image, after = amenity_table) |> 
+      cols_width(amenity_table ~ px(450), delivered ~ px(120), registration ~ px(120)) |>
+      cols_align(align = "center", columns = aircraft_image) |>
+      cols_move(columns = delivered, after = registration) |>
+      cols_label(
+        registration = "Registration Number",
+        delivered = "Delivery Year",
+        amenity_table = "",
+        aircraft_image = "Aircraft"
+      ) |>
+      tab_options(table.width = pct(100), container.width = pct(100)) |>
+      tab_source_note("Information sourced from the OpenSky Network, adsb.lol, ADSB-DB, and the United Fleet Website's mainline fleet tracker. Information, especially route information, may be inaccurate, and is omitted from the table header when unreliable. Table design by Martin Stavro. Information displayed here, including the medium in which it is displayed, is not affiliated with nor endorsed by United Airlines and is presented here within the provisions of fair use.") |>
+      opt_interactive(use_search = TRUE, page_size_values = c(5,10,25), page_size_default = 5)
+
+main_tbl
+```
+
+# About
+
+::: {.card}
+## About the *Unofficial* United Fleet Explorer
+Here are a few things you should know about this app.
+
+### Raison D'être
+Apart from personal curiosity, this dashboard (and its accompanying materials) exists for the 2025 Posit Table contest. I'll keep it running beyond the contest using GitHub actions for any interested users, so long as the underlying APIs that support it still exist.
+
+### Fleet Sample Flight Map
+The flight map displays randomly selected flights refreshed at preset intervals. At the preset interval, GitHub actions regenerates the dashboard with new flights. The current pull rate is 10 flights every 30 minutes.
+
+#### Why does the flight map only display partial flights?
+The flight map only displays a sample of United's active flights to respect the rate limits of OpenSky's API. Querying one aircraft takes roughly 4 credits, and the rate limit for registered users is 4,000 credits per day, hence 1,000 airplanes a day. Note that the credit counts even if the API request returns no information, i.e., querying a United aircraft that's currently on the ground.
+
+#### Please use discretion whenever using the flight map for purposes that depend on accurate information
+The entirety of this project is open-source. That means I'm depending on open sources of information for flight data. There are a lot of incredible contributors collecting flight route data and ADSB data. However, if you're planning on using this app for any purpose that depends on having accurate information (***route information comes to mind***, but ADSB data is also fallible), just know that's probably not the best idea, as United generally changes their mind about operational use of their aircraft faster than open-source contributors can update route databases. As the saying goes, you get what you pay for (in this case, you get a whole lot of data for paying nothing thanks to some awesome people, see the *acknowledgements* section). Please triangulate with other sources if you need accurate information.
+
+### Full Fleet Information
+This page contains a table with the fleet information for all of United's active aircraft, according to the <a href='https://sites.google.com/site/unitedfleetsite/mainline-fleet-tracking'>United Fleet Site project</a>.
+
+### Can I do something like this myself?
+Sure can! The GitHub icon in the top right will take you to the source code for this dashboard, and the book will take you through the documentation of creating the dashboard in its entirety.
+
+### Legalese and Acknowledgements
+I'm not a lawyer. The extent of my legal education is Suits and Better Call Saul, neither of which I would say are particularly shining examples of legal conduct. But I imagine a lawyer might want me to tell you that this project is in no way affiliated or endorsed by United Airlines (hence the **unofficial** moniker), and that any assets of United Airlines are used under the presumption of fair use. The same goes for data sources which this project pulls from, namely the <a href='https://sites.google.com/site/unitedfleetsite/mainline-fleet-tracking'>United Fleet Site project</a>, OpenSky network contributors, adsb.lol contributors, and ADSB-DB. By using this, you're also generally agreeing with the provisions of the MIT license. You can read up on it <a href='https://en.wikipedia.org/wiki/MIT_License'>here</a> if you'd like, but generally it means that you're free to do with the source code as you please (keeping in mind some aforementioned points about fair use, etc.) and that this software is presented as-is, without warranty (i.e., that point about using discretion when depending on this flight map).
+:::

@@ -1,0 +1,18 @@
+meta:
+  name: United Airlines
+  link: https://www.united.com
+    
+logo: 
+  images:
+    united-logo:
+      path: "https://www.united.com/2500e4e62233fbfe8ac6.unitedLogoNew.svg"
+      alt: "United Airlines"
+  small: united-logo
+  medium: united-logo
+  large: united-logo
+
+color:
+  palette:
+    blue: "#1414D2"
+  primary: blue
+  secondary: white

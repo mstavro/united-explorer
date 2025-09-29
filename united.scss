@@ -1,0 +1,19 @@
+/* united.scss */
+
+/*-- scss:defaults --*/
+// Variable definitions go here
+$navbar-bg: black;
+$navbar-fg: white;
+
+/*-- scss:rules --*/
+// CSS rules for styling go here
+body .maplibregl-popup {
+    max-width: 40vw !important;
+    max-height: 70vh !important;
+    z-index: 1200;
+}
+
+body .maplibregl-popup-content {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+}
