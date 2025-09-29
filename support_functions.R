@@ -334,7 +334,7 @@ generate_map_tables <- function(df, specified_callsign, output_html = TRUE){
     "Destination Airport" ~ "Route Information"
     )) |> 
     group_by(category) |>
-    gt() |> tab_header(title = html(glue("{united_logo} <b>{callsign}</b><br>{web_image(aircraftimg, height = '9em')}")), subtitle = html(glue("{bslib::layout_column_wrap(origin_value_box, dest_value_box, max_height = '20vh')}{reliability}<br>Data as of {contact} UTC"))) |> tab_options(table.width = pct(100), container.width = pct(100)) |> tab_source_note("Information sourced from the OpenSky Network, adsb.lol, ADSB-DB, and the United Fleet Website's mainline fleet tracker. Information, especially route information, may be inaccurate, and is omitted from the table header when unreliable. Table design by Martin Stavro. Information displayed here, including the medium in which it is displayed, is not affiliated with nor endorsed by United Airlines and is presented here within the provisions of fair use.") |>
+    gt() |> tab_header(title = html(glue("{united_logo} <b>{callsign}</b><br>{web_image(aircraftimg, height = '9em')}")), subtitle = html(glue("{bslib::layout_column_wrap(origin_value_box, dest_value_box)}{reliability}<br>Data as of {contact} UTC"))) |> tab_options(table.width = pct(100), container.width = pct(100)) |> tab_source_note("Information sourced from the OpenSky Network, adsb.lol, ADSB-DB, and the United Fleet Website's mainline fleet tracker. Information, especially route information, may be inaccurate, and is omitted from the table header when unreliable. Table design by Martin Stavro. Information displayed here, including the medium in which it is displayed, is not affiliated with nor endorsed by United Airlines and is presented here within the provisions of fair use.") |>
     fmt_markdown() |>
     tab_style(
         list(cell_text(weight = 500, color = "#FFFFFF"), cell_fill(color = "#000000")),
@@ -372,8 +372,8 @@ generate_addt_info_table <- function(df, specified_registration){
     ) |>
     pivot_longer(everything()) |>
     mutate(category = case_match(name,
-    "Aircraft Model" ~ "Configuration",
-    "Layout" ~ "Configuration",
+    "Aircraft Model" ~ "Aircraft Information",
+    "Layout" ~ "Aircraft Information",
     "Amenities" ~ "Amenities On-Board",
     "In-Flight Entertainment" ~ "Amenities On-Board",
     "Wi-Fi System" ~ "Amenities On-Board",
@@ -390,9 +390,12 @@ generate_addt_info_table <- function(df, specified_registration){
     tab_options(column_labels.hidden = TRUE) |>
     fmt_markdown() |>
     sub_missing() |>
+    tab_header(title = specified_registration) |>
     tab_style(
       list(cell_text(weight = 400, color = "#FFFFFF"), cell_fill(color = "#000000")),
       list(cells_row_groups(), cells_body(rows = name == "Total Seats"))
     ) |>
+    tab_options(table.width = pct(90), table.border.top.style = "hidden") |>
+    data_color(rows = category == "Seating" & name != "Total Seats", palette = "ggsci::indigo_material", columns = value, na_color = "#FFFFFF") |>
     as_raw_html()
 }

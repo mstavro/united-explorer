@@ -69,7 +69,7 @@ maplibre(style = carto_style("dark-matter"), width = "96vw", height = "100vh", b
 
 ```{r}
 main_tbl <- united_full_fleet_info |> filter(str_starts(registration, "N")) |>
-  mutate(aircraft_seatmap = web_image(aircraft_seatmap, height = "25em")) |>
+  mutate(aircraft_seatmap = web_image(aircraft_seatmap, height = "30em")) |>
       mutate(amenity_ife = case_when(
       ife == "NO" ~ NA,
       str_detect(ife, "No ") ~ NA,
@@ -97,24 +97,33 @@ main_tbl <- united_full_fleet_info |> filter(str_starts(registration, "N")) |>
 united_logo <- web_image("https://www.united.com/2500e4e62233fbfe8ac6.unitedLogoNew.svg", height = "1em")
 
 main_tbl <- main_tbl |> mutate(amenity_table = map(registration, \(x) generate_addt_info_table(main_tbl, x))) |>
-      select(registration, delivered, aircraft_image, aircraft_model, aircraft_seatmap, amenity_table) |>
+      select(delivered, aircraft_image, aircraft_model, aircraft_seatmap, amenity_table) |>
       gt() |>
-      fmt_image(columns = aircraft_image, height = "15em") |> 
+      fmt_image(columns = aircraft_image, height = "22em") |> 
       gt_merge_stack(col1 = aircraft_image, col2 = aircraft_model, font_size = c("14px", "18px"), palette = c("black", "black"), font_weight = c("bold", "normal")) |> 
       gt_merge_stack(col1 = aircraft_image, col2 = aircraft_seatmap) |>
       cols_move(columns = aircraft_image, after = amenity_table) |> 
-      cols_width(amenity_table ~ px(450), delivered ~ px(120), registration ~ px(120)) |>
+      cols_width(amenity_table ~ px(450), aircraft_image ~ px(1200)) |>
       cols_align(align = "center", columns = aircraft_image) |>
-      cols_move(columns = delivered, after = registration) |>
       cols_label(
-        registration = "Registration Number",
         delivered = "Delivery Year",
         amenity_table = "",
         aircraft_image = "Aircraft"
       ) |>
+      tab_style(
+        cell_borders(sides = c("bottom"), weight = px(1.2), style = "dashed"),
+        cells_body()
+      ) |>
+      tab_style(
+        list(
+          cell_fill(color = "#000000"),
+          cell_text(color = "#FFFFFF", weight = 400, stretch = "semi-condensed", size = "large")
+        ),
+        locations = cells_body(columns = delivered)
+      ) |>
       tab_options(table.width = pct(100), container.width = pct(100)) |>
       tab_source_note("Information sourced from the OpenSky Network, adsb.lol, ADSB-DB, and the United Fleet Website's mainline fleet tracker. Information, especially route information, may be inaccurate, and is omitted from the table header when unreliable. Table design by Martin Stavro. Information displayed here, including the medium in which it is displayed, is not affiliated with nor endorsed by United Airlines and is presented here within the provisions of fair use.") |>
-      opt_interactive(use_search = TRUE, page_size_values = c(5,10,25), page_size_default = 5)
+      opt_interactive(use_search = TRUE, page_size_values = c(5,10,25), page_size_default = 5, use_filters = TRUE)
 
 main_tbl
 ```
