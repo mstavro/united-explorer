@@ -1,3 +1,4 @@
+name: Pull flights, render, and publish
 on:
   workflow_dispatch:
   schedule:
@@ -25,12 +26,12 @@ jobs:
       # Render the quarto file
       - name: Render
         run: quarto render index.qmd
+        env:
+          OPENSKY_CLIENT_ID: ${{ secrets.OPENSKY_CLIENT_ID }}
+          OPENSKY_CLIENT_SECRET: ${{ secrets.OPENSKY_CLIENT_SECRET }}
 
       # Publish to GitHub pages
       - name: Publish to GitHub pages 🚀
         uses: quarto-dev/quarto-actions/publish@v2
         with:
           target: gh-pages
-        env:
-          OPENSKY_CLIENT_ID: ${{ secrets.OPENSKY_CLIENT_ID }}
-          OPENSKY_CLIENT_SECRET: ${{ secrets.OPENSKY_CLIENT_SECRET }}
