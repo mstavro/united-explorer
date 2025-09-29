@@ -56,7 +56,7 @@ united_10_positions_gt <- left_join(united_10_positions, united_10_gt) |> st_as_
 :::{.callout-note}
 ## Interact with the Map
 
-Click on any plane icon within the map for additional information. Map data as of `{r} Sys.time()` UTC
+Click on any plane icon within the map for additional information. For the best experience on mobile, rotate your device to landscape. Map data as of `{r} Sys.time()` UTC
 :::
 
 <br>
