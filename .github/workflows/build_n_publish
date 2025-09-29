@@ -1,0 +1,37 @@
+name: render.yaml
+on:
+  workflow_dispatch:
+  schedule:
+    - cron '*/30 * * * *'
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout this repo
+      - uses: actions/checkout@v4
+
+      # Install R
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # Install R packages from files/DESCRIPTION
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      # Install quarto
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      # Render the quarto file
+      - name: Render
+        run: quarto render index.qmd
+
+      # Publish to GitHub pages
+      - name: Publish to GitHub pages 🚀
+        uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+        env:
+          OPENSKY_CLIENT_ID: ${{ secrets.OPENSKY_CLIENT_ID }}
+          OPENSKY_CLIENT_SECRET: ${{ secrets.OPENSKY_CLIENT_SECRET }}
