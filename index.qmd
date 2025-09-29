@@ -96,7 +96,7 @@ main_tbl <- united_full_fleet_info |> filter(str_starts(registration, "N")) |>
 
 united_logo <- web_image("https://www.united.com/2500e4e62233fbfe8ac6.unitedLogoNew.svg", height = "1em")
 
-main_tbl <- main_tbl |> slice_sample(n = 5) |> mutate(amenity_table = map(registration, \(x) generate_addt_info_table(main_tbl, x))) |>
+main_tbl <- main_tbl |> mutate(amenity_table = map(registration, \(x) generate_addt_info_table(main_tbl, x))) |>
       select(registration, delivered, aircraft_image, aircraft_model, aircraft_seatmap, amenity_table) |>
       gt() |>
       fmt_image(columns = aircraft_image, height = "15em") |> 
