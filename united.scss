@@ -7,10 +7,17 @@ $navbar-fg: white;
 
 /*-- scss:rules --*/
 // CSS rules for styling go here
+// Scale pop-up for mobile by doubling the max-width
 body .maplibregl-popup {
-    max-width: 40vw !important;
+    max-width: 80vw !important; // Default for mobile and small screens
     max-height: 70vh !important;
     z-index: 1200;
+}
+
+@media screen and (min-width: 901px) {
+    body .maplibregl-popup {
+        max-width: 40vw !important; // Smaller on desktop
+    }
 }
 
 body .maplibregl-popup-content {
