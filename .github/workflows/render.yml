@@ -28,6 +28,5 @@ jobs:
         with:
           target: gh-pages
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SPOTIFY_CLIENT_ID: ${{ secrets.MY_CLIENT_ID }}
-          SPOTIFY_CLIENT_SECRET: ${{ secrets.MY_CLIENT_SECRET }}
+          OPENSKY_CLIENT_ID: ${{ secrets.OPENSKY_CLIENT_ID }}
+          OPENSKY_CLIENT_SECRET: ${{ secrets.OPENSKY_CLIENT_SECRET }}

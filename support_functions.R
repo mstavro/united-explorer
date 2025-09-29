@@ -3,16 +3,15 @@ if (!("pak" %in% installed.packages())) {
 }
 
 pak::pak("tidyverse")
+pak::pak("httr2")
 pak::pak("mapgl")
 pak::pak("gt")
+pak::pak("gtExtras")
 pak::pak("sf")
 pak::pak("logger")
-pak::pak("mirai")
-pak::pak("carrier")
 pak::pak("glue")
 pak::pak("bslib")
 pak::pak("fontawesome")
-pak::pak("quartose")
 
 library(httr2)
 library(tidyverse)
@@ -25,7 +24,6 @@ library(mapgl)
 library(gt)
 library(gtExtras)
 library(fontawesome)
-library(quartose)
 
 client1 <-
   oauth_client(id = Sys.getenv("OPENSKY_CLIENT_ID"), 
