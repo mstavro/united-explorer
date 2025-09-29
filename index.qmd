@@ -9,6 +9,7 @@ format:
         nav-buttons:
             - icon: book-fill
             - icon: github
+              href: https://github.com/mstavro/united-explorer
         html-table-processing: none
 ---
 
