@@ -1,0 +1,31 @@
+name: Check for changes to the United mainline fleet
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '5 12 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout this repo
+      - uses: actions/checkout@v4
+
+      # Install R
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # Install R packages from files/DESCRIPTION
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      # Execute the script
+      - name: Query changes to United fleet and update active registrations
+        run: Rscript rebuild_fleet_info.R
+
+      # Commit changes to csv back to the repo
+      - uses: stefanzweifel/git-auto-commit-action@v5
