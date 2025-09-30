@@ -1,5 +1,5 @@
 ---
-title: "Unofficial United Fleet Explorer"
+title: "Dashboard"
 format: 
     dashboard:
         orientation: rows
