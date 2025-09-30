@@ -1,5 +1,5 @@
 ---
-title: "Dashboard"
+title: "Unofficial United Mainline Fleet Tracker"
 format: 
     dashboard:
         orientation: rows
@@ -28,7 +28,7 @@ united_explore_10 <-
 
 united_10_tracks <- bind_rows(
   map(united_explore_10, \(x) get_flight_track(x))
-) |> st_as_sf()
+) |> st_as_sf() |> st_wrap_dateline()
 
 united_10_positions <- bind_rows(
   map(united_explore_10, \(x) get_state_vector(x))
