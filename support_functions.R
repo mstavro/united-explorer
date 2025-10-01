@@ -67,7 +67,7 @@ get_flight_track <- function(icao24, as_sf = TRUE){
     return(flight_track)
   },
   error = function(e){
-    log_error("Error occurred when retrieving flight track for {icao24}. Check your icao24 value: {icao24} may be valid but currently inactive.")
+    log_error("Error occurred when retrieving flight track for {icao24}. {e} Check your icao24 value: {icao24} may be valid but currently inactive.")
     flight_position <- tibble(
       icao24 = str_to_lower(icao24),
       on_ground = TRUE
@@ -120,7 +120,7 @@ get_state_vector <- function(icao24, as_sf = TRUE){
   return(flight_position)
 },
 error = function(e){
-  log_error("Error occurred when retrieving state vector for {icao24}. Check your icao24 value: {icao24} may be valid but currently inactive.")
+  log_error("Error occurred when retrieving state vector for {icao24}. {e} Check your icao24 value: {icao24} may be valid but currently inactive.")
   flight_position <- tibble(
     icao24 = str_to_lower(icao24),
     on_ground = TRUE
@@ -142,7 +142,7 @@ get_icao24_from_registration <- function(registration, return_tibble = TRUE){
     }
     },
   error = function(e){
-    log_error("No icao24 information found for registration {registration}")
+    log_error("{registration} encountered error {e}")
     return(NULL)
   })
   }
@@ -161,12 +161,13 @@ get_icao24_from_registration <- function(registration, return_tibble = TRUE){
       }
       },
     error = function(e){
-      log_error("No registration information found for icao24 {icao24}")
+      log_error("{icao24} encountered error {e}")
       return(NULL)
     })
     }
 
 get_route_information <- function(callsign){
+  tryCatch({
   json <- list(
     planes = list(list(callsign = callsign, lat = 0, lng = 0))
   )
@@ -177,12 +178,28 @@ get_route_information <- function(callsign){
     resp_body_json()
 
   route <- route[[1]] |> as_tibble()
+  if(nrow(route) > 2){
+    stop("Callsign has multiple routes or a multi-leg route. Unable to determine routing.")
+  }
   route_origin <- route[1,] |> unnest_wider(`_airports`, names_sep = "_") |> rename_all(~ glue("origin_{.x}"))
-  route_destination <- route[nrow(route),] |> unnest_wider(`_airports`, names_sep = "_") |> rename_all(~ glue("destination_{.x}"))
+  route_destination <- route[2,] |> unnest_wider(`_airports`, names_sep = "_") |> rename_all(~ glue("destination_{.x}"))
 
   route <- bind_cols(route_origin, route_destination) |> rename_all(~ str_replace_all(.x, "__", "_")) |> mutate(callsign = callsign)
 
 return(route)  
+  },
+  error = function(e){
+    log_error("Error getting route info for {callsign} {e}")
+    route <- tibble(origin_airports_iata = NA, 
+      origin_airports_name = NA,
+      origin_airports_countryiso2 = NA,
+      origin_plausible = NA,
+      destination_airports_iata = NA, 
+      destination_airports_name = NA,
+      destination_airports_countryiso2 = NA,
+      destination_plausible = NA,)
+    return(route)
+  })
 }
 
 generate_map_tables <- function(df, specified_callsign, output_html = TRUE){
@@ -262,14 +279,18 @@ generate_map_tables <- function(df, specified_callsign, output_html = TRUE){
 
   gt_tbl <- tbl |> mutate(across(everything(), \(x) as.character(x))) |> 
     mutate(origin_info = 
-    if(origin_plausible == 0){
+    if(origin_plausible == 0 & is.na(origin_airports_name)){
+      as.character(html(glue("{fa('triangle-exclamation', fill = '#990000')} Unable to Determine")))
+      } else if(origin_plausible == 0){
       as.character(html(glue("{fa('triangle-exclamation', fill = '#990000')} {origin_airports_name} {get_flag(origin_airports_countryiso2)}")))
       }
       else{
       as.character(html(glue("{origin_airports_iata} - {origin_airports_name} {get_flag(origin_airports_countryiso2)}")))
       }) |>
     mutate(destination_info = 
-    if(destination_plausible == 0){
+    if(destination_plausible == 0 & is.na(destination_airports_name)){
+      as.character(html(glue("{fa('triangle-exclamation', fill = '#990000')} Unable to Determine")))
+      } else if(destination_plausible == 0){
       as.character(html(glue("{fa('triangle-exclamation', fill = '#990000')} {destination_airports_name} {get_flag(destination_airports_countryiso2)}")))
       }
       else{
