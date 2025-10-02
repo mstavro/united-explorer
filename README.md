@@ -15,11 +15,8 @@ My Quarto doc leverages several APIs behind the scenes alongside some open-sourc
 
 But wait - there's more! I've also written up [a handy Quarto book](https://mstavro.github.io/fleetR-docs/) to go along with my submission, so that anyone interested in visualizing some other fleets, say, the Lufthansa or Delta fleets, can fork my repo and make changes as they follow along.
 
-The dashboard's hosted here, and rebuilt with a GitHub Action roughly every hour or so (depending on how eager the runner's feeling):
+The dashboard's hosted here, rebuilt with a GitHub Action roughly every hour or so (depending on how eager the runner's feeling):
 https://mstavro.github.io/fleetR/
 
 The Quarto book for those looking to read more on how to code this up (and maybe learn about my creative musings) is here:
 https://mstavro.github.io/fleetR-docs/
-
-... and the repo containing the reprex is here:
-https://github.com/mstavro/fleetR
