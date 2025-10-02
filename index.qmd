@@ -14,7 +14,7 @@ format:
 ---
 
 ```{r, include=FALSE}
-source("support_functions.R") 
+source("support_functions.R")
 
 united_full_fleet_info <- read_csv("data/united_full_fleet_info.csv")
 compatible_registrations <- read_csv("data/compatible_registrations.csv")
@@ -28,25 +28,44 @@ united_explore_10 <-
 
 united_10_tracks <- bind_rows(
   map(united_explore_10, \(x) get_flight_track(x))
-) |> st_as_sf() |> st_wrap_dateline()
+) |>
+  st_as_sf()
 
 united_10_positions <- bind_rows(
   map(united_explore_10, \(x) get_state_vector(x))
-) |> mutate(registration = map_chr(icao24, \(x) get_registration_from_icao24(x, return_tibble = F))) |> 
-    st_as_sf()
+) |>
+  mutate(
+    registration = map_chr(icao24, \(x) {
+      get_registration_from_icao24(x, return_tibble = F)
+    })
+  ) |>
+  st_as_sf()
 
-united_10_positions <- left_join(united_10_positions |> mutate(baro_altitude = st_coordinates(united_10_positions)[,3]), united_full_fleet_info) 
-route_info <- bind_rows(
-    map(united_10_positions |> drop_na(callsign) |> pull(callsign), \(x) get_route_information(x))
+united_10_positions <- left_join(
+  united_10_positions |>
+    mutate(baro_altitude = st_coordinates(united_10_positions)[, 3]),
+  united_full_fleet_info
 )
-united_10_positions <- left_join(united_10_positions, route_info) |> drop_na(callsign)
+route_info <- bind_rows(
+  map(united_10_positions |> drop_na(callsign) |> pull(callsign), \(x) {
+    get_route_information(x)
+  })
+)
+united_10_positions <- left_join(united_10_positions, route_info) |>
+  drop_na(callsign)
 
-united_10_tracks <- united_10_tracks |> filter(icao24 %in% (united_10_positions |> drop_na(time) |> pull(icao24)))
+united_10_tracks <- united_10_tracks |>
+  filter(icao24 %in% (united_10_positions |> drop_na(time) |> pull(icao24)))
 
 united_10_gt <- united_10_positions |> as_tibble() |> drop_na(callsign)
-united_10_gt <- united_10_gt |>  mutate(gt_html = map_chr(callsign, \(x) generate_map_tables(df = united_10_gt, x))) |> select(callsign, gt_html)
+united_10_gt <- united_10_gt |>
+  mutate(
+    gt_html = map_chr(callsign, \(x) generate_map_tables(df = united_10_gt, x))
+  ) |>
+  select(callsign, gt_html)
 
-united_10_positions_gt <- left_join(united_10_positions, united_10_gt) |> st_as_sf()
+united_10_positions_gt <- left_join(united_10_positions, united_10_gt) |>
+  st_as_sf()
 ```
 
 # Fleet Sample Flight Map
@@ -62,69 +81,170 @@ Click on any plane icon within the map for additional information. For the best 
 <br>
 
 ```{r}
-maplibre(style = carto_style("dark-matter"), bounds = united_10_tracks, height = "100vh", attributionControl = list(customAttribution = "<a href='https://sites.google.com/site/unitedfleetsite/mainline-fleet-tracking'>United Fleet Site project contributors</a>, OpenSky Network contributors, adsb.lol, ADSB-DB", compact = TRUE)) |> set_projection("globe") |> add_source(id = "paths", data = united_10_tracks) |> add_source(id = "positions", data = united_10_positions_gt) |> add_image("aircraft-icon", "https://upload.wikimedia.org/wikipedia/commons/1/10/Avatar_plane.png") |> add_line_layer(id = "flight-tracks", source = "paths", line_color = "#1414D2", line_width = 3) |> add_symbol_layer(id = "aircraft-positions", source = "positions", icon_rotate = get_column("true_track"), icon_image = "aircraft-icon", icon_size = interpolate(property=  "zoom", values = c(4,8,12), stops = c(0.15, 0.25, 0.4)), icon_allow_overlap = TRUE, popup = "gt_html", tooltip = "gt_html", icon_rotation_alignment = "map", icon_pitch_alignment = "map") |> add_fullscreen_control() |> add_reset_control()
+maplibre(
+  style = carto_style("dark-matter"),
+  bounds = united_10_tracks,
+  height = "100vh",
+  attributionControl = list(
+    customAttribution = "<a href='https://sites.google.com/site/unitedfleetsite/mainline-fleet-tracking'>United Fleet Site project contributors</a>, OpenSky Network contributors, adsb.lol, ADSB-DB",
+    compact = TRUE
+  )
+) |>
+  set_projection("globe") |>
+  add_source(id = "paths", data = united_10_tracks) |>
+  add_source(id = "positions", data = united_10_positions_gt) |>
+  add_image(
+    "aircraft-icon",
+    "https://upload.wikimedia.org/wikipedia/commons/1/10/Avatar_plane.png"
+  ) |>
+  add_line_layer(
+    id = "flight-tracks",
+    source = "paths",
+    line_color = "#1414D2",
+    line_width = 3
+  ) |>
+  add_symbol_layer(
+    id = "aircraft-positions",
+    source = "positions",
+    icon_rotate = get_column("true_track"),
+    icon_image = "aircraft-icon",
+    icon_size = interpolate(
+      property = "zoom",
+      values = c(4, 8, 12),
+      stops = c(0.15, 0.25, 0.4)
+    ),
+    icon_allow_overlap = TRUE,
+    popup = "gt_html",
+    tooltip = "gt_html",
+    icon_rotation_alignment = "map",
+    icon_pitch_alignment = "map"
+  ) |>
+  add_fullscreen_control() |>
+  add_reset_control()
 ```
 
 # Full Fleet Information
 
 
 ```{r}
-main_tbl <- united_full_fleet_info |> filter(str_starts(registration, "N")) |>
+main_tbl <- united_full_fleet_info |>
+  filter(str_starts(registration, "N")) |>
   mutate(aircraft_seatmap = web_image(aircraft_seatmap, height = "30em")) |>
-      mutate(amenity_ife = case_when(
+  mutate(
+    amenity_ife = case_when(
       ife == "NO" ~ NA,
       str_detect(ife, "No ") ~ NA,
-      str_detect(ife, "AVOD|DTV") & str_detect(ife, "PDE") ~ glue('{web_image("https://media.united.com/assets/m/6902cf38052408ed/original/x-global-icons-travel-airport-on-demand.svg")} {web_image("https://media.united.com/assets/m/36ec366e93188fda/original/x-global-icons-travel-airport-personal-device.svg")}'),
-      str_detect(ife, "AVOD|DTV") ~ web_image("https://media.united.com/assets/m/6902cf38052408ed/original/x-global-icons-travel-airport-on-demand.svg"),
-      str_detect(ife, "Seatback|SEATBACK") ~ web_image("https://media.united.com/assets/m/6902cf38052408ed/original/x-global-icons-travel-airport-on-demand.svg"),
-      str_detect(ife, "PDE") ~ web_image("https://media.united.com/assets/m/36ec366e93188fda/original/x-global-icons-travel-airport-personal-device.svg")
-    )) |>
-    mutate(amenity_wifi = case_when(
+      str_detect(ife, "AVOD|DTV") & str_detect(ife, "PDE") ~
+        glue(
+          '{web_image("https://media.united.com/assets/m/6902cf38052408ed/original/x-global-icons-travel-airport-on-demand.svg")} {web_image("https://media.united.com/assets/m/36ec366e93188fda/original/x-global-icons-travel-airport-personal-device.svg")}'
+        ),
+      str_detect(ife, "AVOD|DTV") ~
+        web_image(
+          "https://media.united.com/assets/m/6902cf38052408ed/original/x-global-icons-travel-airport-on-demand.svg"
+        ),
+      str_detect(ife, "Seatback|SEATBACK") ~
+        web_image(
+          "https://media.united.com/assets/m/6902cf38052408ed/original/x-global-icons-travel-airport-on-demand.svg"
+        ),
+      str_detect(ife, "PDE") ~
+        web_image(
+          "https://media.united.com/assets/m/36ec366e93188fda/original/x-global-icons-travel-airport-personal-device.svg"
+        )
+    )
+  ) |>
+  mutate(
+    amenity_wifi = case_when(
       wifi == "NO" ~ NA,
-      .default = web_image("https://media.united.com/assets/m/4d2b44a2bcff27d9/original/x-global-icons-travel-airport-wifi.svg")
-    )) |>
-    mutate(amenity_power = case_when(
+      .default = web_image(
+        "https://media.united.com/assets/m/4d2b44a2bcff27d9/original/x-global-icons-travel-airport-wifi.svg"
+      )
+    )
+  ) |>
+  mutate(
+    amenity_power = case_when(
       power == "NO" ~ NA,
       power == "F/E+" ~ NA,
-      .default = web_image("https://media.united.com/assets/m/3acf299d26de7a3b/original/x-global-icons-travel-airport-in-seat-power.svg")
-    )) |>
-    mutate(amenity_power = case_when(
-      str_detect(power, "USB") ~ glue("{amenity_power} {web_image('https://media.united.com/assets/m/601a3d239d42470/original/USB-icon.svg')}"),
-      .default = amenity_power
-    )) |>
-      mutate(amenities = glue("{amenity_wifi} {amenity_power} {amenity_ife}", .na = "")) |>
-      select(-amenity_wifi, -amenity_power, -amenity_ife)
-
-united_logo <- web_image("https://www.united.com/2500e4e62233fbfe8ac6.unitedLogoNew.svg", height = "1em")
-
-main_tbl <- main_tbl |> mutate(amenity_table = map(registration, \(x) generate_addt_info_table(main_tbl, x))) |>
-      select(delivered, aircraft_image, aircraft_model, aircraft_seatmap, amenity_table) |>
-      gt() |>
-      fmt_image(columns = aircraft_image, height = "22em") |> 
-      gt_merge_stack(col1 = aircraft_image, col2 = aircraft_model, font_size = c("14px", "18px"), palette = c("black", "black"), font_weight = c("bold", "normal")) |> 
-      gt_merge_stack(col1 = aircraft_image, col2 = aircraft_seatmap) |>
-      cols_move(columns = aircraft_image, after = amenity_table) |> 
-      cols_width(amenity_table ~ px(450), aircraft_image ~ px(1200)) |>
-      cols_align(align = "center", columns = aircraft_image) |>
-      cols_label(
-        delivered = "Delivery Year",
-        amenity_table = "",
-        aircraft_image = "Aircraft"
-      ) |>
-      tab_style(
-        cell_borders(sides = c("bottom"), weight = px(1.2), style = "dashed"),
-        cells_body()
-      ) |>
-      tab_style(
-        list(
-          cell_fill(color = "#000000"),
-          cell_text(color = "#FFFFFF", weight = 400, stretch = "semi-condensed", size = "large")
+      .default = web_image(
+        "https://media.united.com/assets/m/3acf299d26de7a3b/original/x-global-icons-travel-airport-in-seat-power.svg"
+      )
+    )
+  ) |>
+  mutate(
+    amenity_power = case_when(
+      str_detect(power, "USB") ~
+        glue(
+          "{amenity_power} {web_image('https://media.united.com/assets/m/601a3d239d42470/original/USB-icon.svg')}"
         ),
-        locations = cells_body(columns = delivered)
-      ) |>
-      tab_options(table.width = pct(100), container.width = pct(100)) |>
-      tab_source_note("Information sourced from the OpenSky Network, adsb.lol, ADSB-DB, and the United Fleet Website's mainline fleet tracker. Information, especially route information, may be inaccurate, and is omitted from the table header when unreliable. Table design by Martin Stavro. Information displayed here, including the medium in which it is displayed, is not affiliated with nor endorsed by United Airlines and is presented here within the provisions of fair use.") |>
-      opt_interactive(use_search = TRUE, page_size_values = c(5,10,25), page_size_default = 5, use_filters = TRUE)
+      .default = amenity_power
+    )
+  ) |>
+  mutate(
+    amenities = glue("{amenity_wifi} {amenity_power} {amenity_ife}", .na = "")
+  ) |>
+  select(-amenity_wifi, -amenity_power, -amenity_ife)
+
+united_logo <- web_image(
+  "https://www.united.com/2500e4e62233fbfe8ac6.unitedLogoNew.svg",
+  height = "1em"
+)
+
+main_tbl <- main_tbl |>
+  mutate(
+    amenity_table = map(registration, \(x) {
+      generate_addt_info_table(main_tbl, x)
+    })
+  ) |>
+  select(
+    delivered,
+    aircraft_image,
+    aircraft_model,
+    aircraft_seatmap,
+    amenity_table
+  ) |>
+  gt() |>
+  fmt_image(columns = aircraft_image, height = "22em") |>
+  gt_merge_stack(
+    col1 = aircraft_image,
+    col2 = aircraft_model,
+    font_size = c("14px", "18px"),
+    palette = c("black", "black"),
+    font_weight = c("bold", "normal")
+  ) |>
+  gt_merge_stack(col1 = aircraft_image, col2 = aircraft_seatmap) |>
+  cols_move(columns = aircraft_image, after = amenity_table) |>
+  cols_width(amenity_table ~ px(450), aircraft_image ~ px(1200)) |>
+  cols_align(align = "center", columns = aircraft_image) |>
+  cols_label(
+    delivered = "Delivery Year",
+    amenity_table = "",
+    aircraft_image = "Aircraft"
+  ) |>
+  tab_style(
+    cell_borders(sides = c("bottom"), weight = px(1.2), style = "dashed"),
+    cells_body()
+  ) |>
+  tab_style(
+    list(
+      cell_fill(color = "#000000"),
+      cell_text(
+        color = "#FFFFFF",
+        weight = 400,
+        stretch = "semi-condensed",
+        size = "large"
+      )
+    ),
+    locations = cells_body(columns = delivered)
+  ) |>
+  tab_options(table.width = pct(100), container.width = pct(100)) |>
+  tab_source_note(
+    "Information sourced from the OpenSky Network, adsb.lol, ADSB-DB, and the United Fleet Website's mainline fleet tracker. Information, especially route information, may be inaccurate, and is omitted from the table header when unreliable. Table design by Martin Stavro. Information displayed here, including the medium in which it is displayed, is not affiliated with nor endorsed by United Airlines and is presented here within the provisions of fair use."
+  ) |>
+  opt_interactive(
+    use_search = TRUE,
+    page_size_values = c(5, 10, 25),
+    page_size_default = 5,
+    use_filters = TRUE
+  )
 
 main_tbl
 ```
