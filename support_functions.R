@@ -236,11 +236,11 @@ get_route_information <- function(callsign) {
         origin_airports_iata = NA,
         origin_airports_name = NA,
         origin_airports_countryiso2 = NA,
-        origin_plausible = NA,
+        origin_plausible = 0,
         destination_airports_iata = NA,
         destination_airports_name = NA,
         destination_airports_countryiso2 = NA,
-        destination_plausible = NA,
+        destination_plausible = 0,
       )
       return(route)
     }
@@ -258,14 +258,6 @@ generate_map_tables <- function(df, specified_callsign, output_html = TRUE) {
     "https://www.united.com/2500e4e62233fbfe8ac6.unitedLogoNew.svg",
     height = "1em"
   )
-
-  if (is.null(tbl$origin_plausible) | is.na(tbl$origin_plausible)) {
-    tbl$origin_plausible <- 0
-  }
-
-  if (is.null(tbl$destination_plausible | is.na(tbl$destination_plausible))) {
-    tbl$destination_plausible <- 0
-  }
 
   ### Add fallbacks in case route data is inaccurate. API provides a 0/1 metric for plausibility.
   if (tbl$origin_plausible == 1) {

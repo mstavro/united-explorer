@@ -24,7 +24,7 @@ compatible_registrations <- read_csv("data/compatible_registrations.csv")
 ### to adhere OpenSky API rate limits
 united_explore_10 <-
   compatible_registrations |>
-  slice_sample(n = 35) |>
+  slice_sample(n = 10) |>
   pull(icao24)
 
 united_10_tracks <- bind_rows(
@@ -58,7 +58,9 @@ united_10_positions <- left_join(united_10_positions, route_info) |>
 united_10_tracks <- united_10_tracks |>
   filter(icao24 %in% (united_10_positions |> drop_na(time) |> pull(icao24)))
 
-united_10_gt <- united_10_positions |> as_tibble() |> drop_na(callsign)
+united_10_gt <- united_10_positions |>
+  as_tibble() |>
+  drop_na(origin_plausible, destination_plausible)
 united_10_gt <- united_10_gt |>
   mutate(
     gt_html = map_chr(callsign, \(x) generate_map_tables(df = united_10_gt, x))
