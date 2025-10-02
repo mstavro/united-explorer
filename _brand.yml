@@ -1,18 +1,17 @@
 meta:
-  name: United Airlines
-  link: https://www.united.com
+  name: fleetR
     
 logo: 
   images:
-    united-logo:
-      path: "https://www.united.com/2500e4e62233fbfe8ac6.unitedLogoNew.svg"
-      alt: "United Airlines"
-  small: united-logo
-  medium: united-logo
-  large: united-logo
+    fleetR-logo:
+      path: fleetR_white.png
+      alt: "fleetR Logo"
+  small: fleetR-logo
+  medium: fleetR-logo
+  large: fleetR-logo
 
 color:
   palette:
-    blue: "#1414D2"
+    blue: "#2323FF"
   primary: blue
   secondary: white
