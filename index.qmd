@@ -79,7 +79,7 @@ united_10_positions_gt <- left_join(united_10_positions, united_10_gt) |>
 :::{.callout-note}
 ## Interact with the Map
 
-This dashboard is currently configured to track a subset of **United's** fleet. Click on any plane icon within the map for additional information. For the best experience on mobile, rotate your device to landscape. Map data as of `{r} Sys.time()` UTC
+This dashboard is configured to display a different subset of **United's** fleet every hour. Click on any plane icon in the map for additional information. For the best experience on mobile, rotate your device to landscape. Map data as of `{r} Sys.time()` UTC
 :::
 
 <br>
