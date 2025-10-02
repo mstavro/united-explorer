@@ -8,6 +8,7 @@ format:
             - united.scss
         nav-buttons:
             - icon: book-fill
+              href: https://mstavro.github.io/united-explorer-docs/
             - icon: github
               href: https://github.com/mstavro/united-explorer
         html-table-processing: none
