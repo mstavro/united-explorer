@@ -232,6 +232,7 @@ get_route_information <- function(callsign) {
     error = function(e) {
       log_error("Error getting route info for {callsign} {e}")
       route <- tibble(
+        callsign = callsign,
         origin_airports_iata = NA,
         origin_airports_name = NA,
         origin_airports_countryiso2 = NA,
