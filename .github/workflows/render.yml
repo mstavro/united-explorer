@@ -2,7 +2,7 @@ name: Pull flights, render, and publish
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 */1 * * *'
 permissions:
   contents: write
 jobs:
