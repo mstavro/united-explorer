@@ -1,5 +1,5 @@
 ---
-title: "fleetR: Airline Fleet Tracker"
+title: "fleetR: Airline Fleet Explorer"
 format: 
     dashboard:
         orientation: rows
@@ -24,7 +24,7 @@ compatible_registrations <- read_csv("data/compatible_registrations.csv")
 ### to adhere OpenSky API rate limits
 united_explore_10 <-
   compatible_registrations |>
-  slice_sample(n = 5) |>
+  slice_sample(n = 30) |>
   pull(icao24)
 
 united_10_tracks <- bind_rows(
@@ -277,5 +277,5 @@ This page contains a table with the fleet information for all of United's active
 Sure can! The GitHub icon in the top right will take you to the source code for this dashboard, and the book will take you through the documentation of creating the dashboard in its entirety.
 
 ### Legalese and Acknowledgements
-I'm not a lawyer. The extent of my legal education is Suits and Better Call Saul, neither of which I would say are particularly shining examples of legal conduct. But it's worth noting that this project is in no way affiliated, endorsed, or otherwise approved by United Airlines (hence the **unofficial** moniker), and that any media assets of United Airlines are used under the presumption of fair use. This site contains only publicly available information. The same goes for data sources which this project pulls from, namely the <a href='https://sites.google.com/site/unitedfleetsite/mainline-fleet-tracking'>United Fleet Site project</a>, OpenSky network contributors, adsb.lol contributors, and ADSB-DB. By using this, you're also generally agreeing with the provisions of the MIT license. You can read up on it <a href='https://en.wikipedia.org/wiki/MIT_License'>here</a> if you'd like, but generally it means that you're free to do with the source code as you please (keeping in mind some aforementioned points about fair use, etc.) and that this software is presented as-is, without warranty (i.e., that point about using discretion when depending on this flight map). See the original sources of information for their terms of use.
+I'm not a lawyer. The extent of my legal education is Suits and Better Call Saul, neither of which I would say are particularly shining examples of legal conduct. But it's worth noting that this project is in no way affiliated, endorsed, or otherwise approved by United Airlines, and that any media assets of United Airlines are used under the presumption of fair use. This site contains only publicly available information. The same goes for data sources which this project pulls from, namely the <a href='https://sites.google.com/site/unitedfleetsite/mainline-fleet-tracking'>United Fleet Site project</a>, OpenSky network contributors, adsb.lol contributors, and ADSB-DB. By using this, you're also generally agreeing with the provisions of the MIT license. You can read up on it <a href='https://en.wikipedia.org/wiki/MIT_License'>here</a> if you'd like, but generally it means that you're free to do with the source code as you please (keeping in mind some aforementioned points about fair use, etc.) and that this software is presented as-is, without warranty (i.e., that point about using discretion when depending on this flight map). See the original sources of information for their terms of use.
 :::
