@@ -523,7 +523,7 @@ generate_map_tables <- function(df, specified_callsign, output_html = TRUE) {
     ) |>
     tab_options(table.width = pct(100), container.width = pct(100)) |>
     tab_source_note(
-      "Information sourced from the OpenSky Network, adsb.lol, ADSB-DB, and the United Fleet Website's mainline fleet tracker. Information, especially route information, may be inaccurate, and is omitted from the table header when unreliable. Table design by Martin Stavro. Information displayed here, including the medium in which it is displayed, is not affiliated with nor endorsed by United Airlines and is presented here within the provisions of fair use."
+      "Information sourced from the OpenSky Network, adsb.lol, ADSB-DB, and the United Fleet Website's mainline fleet tracker. Information, especially route information, may be inaccurate, and is omitted from the table header when unreliable. Table design by Martin Stavro. Information displayed here, including the medium in which it is displayed, is not affiliated with, endorsed, or otherwise approved by United Airlines and is presented here under the presumption of fair use."
     ) |>
     tab_footnote(
       "J = United Polaris seats; F = First Class; PP = Premium Plus; E+ = Economy Plus; Y = Economy.",
