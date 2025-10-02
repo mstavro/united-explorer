@@ -24,7 +24,7 @@ compatible_registrations <- read_csv("data/compatible_registrations.csv")
 ### to adhere OpenSky API rate limits
 united_explore_10 <-
   compatible_registrations |>
-  slice_sample(n = 35) |>
+  slice_sample(n = 30) |>
   pull(icao24)
 
 united_10_tracks <- bind_rows(
