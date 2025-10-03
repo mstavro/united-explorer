@@ -161,6 +161,7 @@ get_icao24_from_registration <- function(registration, return_tibble = TRUE) {
     {
       icao24 <- request("https://api.adsbdb.com/v0/n-number/") |>
         req_url_path_append(registration) |>
+        req_throttle(capacity = 500) |>
         req_perform() |>
         resp_body_json()
 
@@ -182,6 +183,7 @@ get_registration_from_icao24 <- function(icao24, return_tibble = TRUE) {
     {
       registration <- request("https://api.adsbdb.com/v0/mode-s/") |>
         req_url_path_append(icao24) |>
+        req_throttle(capacity = 500) |>
         req_perform() |>
         resp_body_json()
 
