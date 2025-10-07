@@ -3,7 +3,7 @@ name: Check for changes to the United mainline fleet
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 16 * * *'
+    - cron: '30 16 * * *'
 
 permissions:
   contents: write
