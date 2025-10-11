@@ -210,7 +210,7 @@ get_route_information <- function(callsign) {
       ### this API doesn't claim to have a rate limit but it does
       ### temporary fix due to a bug in httr2's req_throttle resetting in loops
       ### see issue 801 in httr2 repo
-      Sys.sleep(1)
+      Sys.sleep(0.5)
       ###
 
       route <- request("https://api.adsb.lol/api/0/routeset/") |>
