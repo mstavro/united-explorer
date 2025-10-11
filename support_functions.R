@@ -207,6 +207,12 @@ get_route_information <- function(callsign) {
         planes = list(list(callsign = callsign, lat = 0, lng = 0))
       )
 
+      ### this API doesn't claim to have a rate limit but it does
+      ### temporary fix due to a bug in httr2's req_throttle resetting in loops
+      ### see issue 801 in httr2 repo
+      Sys.sleep(1)
+      ###
+
       route <- request("https://api.adsb.lol/api/0/routeset/") |>
         req_body_json(json) |>
         req_perform() |>
